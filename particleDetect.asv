@@ -303,13 +303,13 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             %Crop Image to just the portion of the drum that contains particles
             %by drawing circle on first frame in dataset
             if frame==1
-            imshow(red)
+            imshow(Rimg_prepro)
             drumCrop = drawcircle; 
             drumMask = createMask(drumCrop);
             
             %Draw a circle around a large particle to determine large particle
             %radius in pixels
-            imshow(red);
+            imshow(Rimg_prepro);
             d = drawcircle;
             RL = d.Radius;
             RL = round(RL);
@@ -320,6 +320,7 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             RS = d.Radius;
             RS = round(RS);
             
+            pxPerMeter = 0.0047625 / RL;
             end
             
         

@@ -11,16 +11,16 @@ function PeGSModular(topDirectory, imageNames)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%User input values
 %topDirectory = '/mnt/ncsudrive/c/cllee3/MyEno/DATA/jekollme/20160701/Steps/artificial/'
-topDirectory = '/eno/cllee3/DATA/240603/run1/' % location of image files
+topDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/' % location of image files
 %topDirectory = './testdata/square/'
 %topDirectory = '/Users/carmenlee/Desktop/20150731reprocesseduniaxial/'
 % %topDirectory = './DATA/test/Step09/'
-imageNames = '200Hz_5spfT_*.jpg'; %image format and regex
-frameidind = 16;
+imageNames = 'DSC*.JPG'; %image format and regex
+%frameidind = 16;
 %
 %files = dir([topDirectory,imageNames])
-boundaryType = "annulus"; %if airtable use "airtable" if annulus use "annulus"
-radiusRange = [40, 57];
+boundaryType = "drum"; %if airtable use "airtable" if annulus use "annulus"
+%radiusRange = [40, 57];
 %radiusRange = [45, 78]; %airtable
 
 verbose = false;
