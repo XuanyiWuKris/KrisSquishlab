@@ -293,13 +293,15 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             %for frame = 1:1
             %frame = 663
             im = imread([directory,images(frame).name]);
-            red = im(:,:,1);
-            green = im(:,:,2);
-            red = imsubtract(red, green*0.05);
+            % red = im(:,:,1);
+            % green = im(:,:,2);
+            % red = imsubtract(red, green*0.05);
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Integrate Alec's version %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            red = im(:,:,:);
+            red = red*0.4;
             %Crop Image to just the portion of the drum that contains particles
             %by drawing circle on first frame in dataset
             if frame==1
@@ -325,14 +327,14 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
         
             %Crop images down to particle packing (make the toothed ring and 
             %everything outside of the drum black)
-            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(drumMask, class(Rimg_prepro)));
-            wallMask = bsxfun(@times, Gimg, cast(drumMask, class(Gimg)));
+            red = bsxfun(@times, red, cast(drumMask, class(red)));
+            wallMask = bsxfun(@times, green, cast(drumMask, class(green)));
             wallMask=imadjust(wallMask,[0 0.05]);
             wallMask=imgaussfilt(wallMask,4);
             wallMask=imbinarize(wallMask);
-            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(wallMask, class(Rimg_prepro)));
+            red = bsxfun(@times, red, cast(wallMask, class(red)));
 
-            [centers, radii, metrics] = AlecParticleFind(Rimg_prepro,wallMask,RS,RL,NsmallH,NlargeH);
+            [centers, radii, metrics] = AlecParticleFind(red,wallMask,RS,RL,256,259);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%
             % End of Alec's version %

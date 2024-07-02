@@ -11,16 +11,17 @@ function PeGSModular(topDirectory, imageNames)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%User input values
 %topDirectory = '/mnt/ncsudrive/c/cllee3/MyEno/DATA/jekollme/20160701/Steps/artificial/'
-topDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/' % location of image files
+topDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/'; % location of image files
+preProDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/PreProImages/';
 %topDirectory = './testdata/square/'
 %topDirectory = '/Users/carmenlee/Desktop/20150731reprocesseduniaxial/'
 % %topDirectory = './DATA/test/Step09/'
 imageNames = 'DSC*.JPG'; %image format and regex
-%frameidind = 16;
+frameidind = 16;
 %
 %files = dir([topDirectory,imageNames])
 boundaryType = "drum"; %if airtable use "airtable" if annulus use "annulus"
-%radiusRange = [40, 57];
+radiusRange = [40, 57];
 %radiusRange = [45, 78]; %airtable
 
 verbose = false;
@@ -72,20 +73,23 @@ end
 %preprocess(topDirectory, imageNames, boundaryType, verbose);
 
 %%
-%particleDetect(topDirectory, imageNames, radiusRange, boundaryType, verbose);
-'particles detected'
+particleDetect(preProDirectory, imageNames, radiusRange, boundaryType, verbose);
+fprintf('particles detected')
+
+boundaryType = "airtable";
+
 %%
-%particleTrack(topDirectory, imageNames, boundaryType, frameidind, verbose, false);
-'trajectories connected'
+particleTrack(topDirectory, imageNames, boundaryType, frameidind, verbose, false);
+fprintf('trajectories connected')
 %%
-%contactDetection(topDirectory, imageNames, boundaryType,frameidind, verbose)
-'contacts detected'
+contactDetection(topDirectory, imageNames, boundaryType,frameidind, verbose)
+fprintf('contacts detected')
 %%
-%diskSolve(topDirectory, imageNames, boundaryType, verbose)
-'forces solved'
+diskSolve(topDirectory, imageNames, boundaryType, verbose)
+fprintf('forces solved')
 %%
 newtonize(topDirectory, imageNames, boundaryType, verbose)
-'newtonized and edges handled'
+fprintf('newtonized and edges handled')
 %%
 adjacencyMatrix(topDirectory, imageNames, boundaryType, frameidind,verbose)
-'Adjacency matrix built'
+fprintf('Adjacency matrix built')

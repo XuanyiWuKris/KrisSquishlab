@@ -8,9 +8,8 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
     fprintf('imfindcircles initially detected %d small particles\n',length(centersS))
 
     %Number of particles detected
-    Nlarge=length(centersL);
-    Nsmall=length(centersS);
-
+    Nlarge=length(centersL); Nsmall=length(centersS);
+    Idlarge=uint8(1):uint8(Nlarge); Idsmall=uint8(1):uint8(Nsmall);
 
     %Remove any small or large particle whose perimeter lies on the
     %toothed ring
@@ -26,7 +25,7 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
             y_test = round(y + r * sin(theta));
     
             if wallMask(y_test, x_test) == 0
-                centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];
+                centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];Idsmall(n)=[];
                 Nsmall=Nsmall-1;
                 n=n-1;
                 break
@@ -39,14 +38,14 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
     while n <= Nlarge && Nlarge > NlargeH
         x=centersL(n,1);
         y=centersL(n,2);
-        r=0.67*(particleL(n).r);
+        r = 0.67 * radiiL(n);
 
         for theta = linspace(0,2*pi)
             x_test=round(x+r*cos(theta));
             y_test=round(y+r*sin(theta));
 
             if wallMask(y_test,x_test)==0
-                centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];
+                centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];Idlarge(n)=[];
                 Nlarge=Nlarge-1;
                 n=n-1;
                 break;
@@ -69,18 +68,21 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         m1=metricS(n);
         j=n+1;
         while j<=Nsmall
-            x2=particleS(j).x;
-            y2=particleS(j).y;
-            r2=particleS(j).r;
-            m2=particleS(j).metric;
+            x2=centersS(j,1);
+            y2=centersS(j,2);
+            r2=radiiS(j);
+            m2=metricS(j);
             if (sqrt((x1-x2)^2+(y1-y2)^2))<(0.5*r1+r2)
                 if(m1<m2)
-                    centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];
+                    centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];Idsmall(n)=[];
                     Nsmall=Nsmall-1;
                     n=n-1;
                     break
                 else
-                    centersS(j,:)=[];radiiS(j)=[];metricS(j)=[];
+                    centersS(j,:)=[];
+                    radiiS(j)=[];
+                    metricS(j)=[];
+                    Idsmall(j)=[];
                     Nsmall=Nsmall-1;
                     j=j-1;
                 end
@@ -94,7 +96,6 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
 
     %If two large particlces are overlapping by 20% of large radius,
     %remove the one that is less circular (lower metric)
-    Nlarge = length(particleL);
     n=1;
     while n <= Nlarge && Nlarge > NlargeH
         x1=centersL(n,1);
@@ -102,17 +103,17 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         m1=metricL(n);
         j=n+1;
         while j<=Nlarge
-            x2=particleL(j).x;
-            y2=particleL(j).y;
-            m2=particleL(j).metric;
+            x2=centersL(j,1);
+            y2=centersL(j,2);
+            m2=metricL(j);
             if sqrt((x1-x2)^2+(y1-y2)^2)<((2*RL)-(.3*RL))
                 if(m1<m2)
-                    centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];
+                    centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];Idlarge(n)=[];
                     Nlarge=Nlarge-1;
                     n=n-1;
                     break
                 else
-                    centersL(j,:)=[];radiiL(j)=[];metricL(j)=[];
+                    centersL(j,:)=[];radiiL(j)=[];metricL(j)=[];Idlarge(j)=[];
                     Nlarge=Nlarge-1;
                     j=j-1;
                 end
@@ -136,10 +137,10 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         numParticlesPartialEnclosed=0;
         numParticlesFullyEnclosed=0;
         while j<=Nsmall
-            x2=particleS(j).x;
-            y2=particleS(j).y;
-            r2=particleS(j).r;
-            m2=particleS(j).metric;
+            x2=centersL(j,1);
+            y2=centersL(j,2);
+            r2=radiiL(j);
+            m2=metricL(j);
             if sqrt((x1-x2)^2+(y1-y2)^2) < r1+0.5*r2 && m2>1.25*m1
                 numParticlesPartialEnclosed=numParticlesPartialEnclosed+1;
             end
@@ -149,11 +150,11 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
             j=j+1;
         end
         if numParticlesPartialEnclosed>1
-            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];
+            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];Idlarge(n)=[];
             Nlarge=Nlarge-1;
             n=n-1;
         elseif numParticlesFullyEnclosed>0
-            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];
+            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];Idlarge(n)=[];
             Nlarge=Nlarge-1;
             n=n-1;
         end
@@ -169,11 +170,11 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         m1=metricS(n);
         j=1;
         while j<=Nlarge
-            x2=particleL(j).x;
-            y2=particleL(j).y;
-            m2=particleL(j).metric;
+            x2=centersL(j,1);
+            y2=centersL(j,2);
+            m2=metricL(j);
             if sqrt((x1-x2)^2+(y1-y2)^2)<RL-0.75*RS && m1<2*m2
-                    centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];
+                    centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];Idsmall(n)=[];
                     Nsmall=Nsmall-1;
                     n=n-1;
                     break
@@ -200,9 +201,9 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         numLargeOverlap=0;
         numSmallOverlap=0;
         while j<=Nlarge
-            x2=particleL(j).x;
-            y2=particleL(j).y;
-            m2=particleL(j).metric;
+            x2=centersL(j,1);
+            y2=centersL(j,2);
+            m2=metricL(j);
             if sqrt((x1-x2)^2+(y1-y2)^2)<(RL+0.5*RS) && m1<m2
                 numLargeOverlap=numLargeOverlap+1;
             end
@@ -210,7 +211,7 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
                 numSmallOverlap=numSmallOverlap+1;
             end
             if numLargeOverlap>0 || numLargeOverlap+numSmallOverlap>1
-                centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];
+                centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];Idsmall(n)=[];
                     Nsmall=Nsmall-1;
                     n=n-1;
                     break
@@ -245,13 +246,13 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
     while n <= Nsmall && Nsmall > NsmallH
         x1=centersS(n,1);
         y1=centersS(n,2);
-        id1=particleS(n).id;
+        id1=Idsmall(n);
         j=1;
         z=0;
         while j<=Nsmall
-            x2=particleS(j).x;
-            y2=particleS(j).y;
-            id2=particleS(j).id;
+            x2=centersS(j,1);
+            y2=centersS(j,2);
+            id2=Idsmall(j);
             if sqrt((x1-x2)^2+(y1-y2)^2)<((2*RS)+(0.20*RS)) && id1~=id2
                 z=z+1;
             end
@@ -259,15 +260,15 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         end
         i=1;
         while i<=Nlarge
-            x2=particleL(i).x;
-            y2=particleL(i).y;
+            x2=centersL(i,1);
+            y2=centersL(i,2);
             if sqrt((x1-x2)^2+(y1-y2)^2)<((RS+RL)+(0.20*RL))
                 z=z+1;
             end
             i=i+1;
         end
         if z<1
-            centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];
+            centersS(n,:)=[];radiiS(n)=[];metricS(n)=[];Idsmall(n)=[];
             Nsmall=Nsmall-1;
             n=n-1;
         end
@@ -277,13 +278,13 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
     while n <= Nlarge && Nlarge > NlargeH
         x1=centersL(n,1);
         y1=centersL(n,2);
-        id1=particleL(n).id;
+        id1=Idlarge(n);
         j=1;
         z=0;
         while j<=Nlarge
-            x2=particleL(j).x;
-            y2=particleL(j).y;
-            id2=particleL(j).id;
+            x2=centersL(j,1);
+            y2=centersL(j,2);
+            id2=Idlarge(j);
             if sqrt((x1-x2)^2+(y1-y2)^2)<((2*RL)+(0.20*RL)) && id1~=id2
                 z=z+1;
             end
@@ -291,15 +292,15 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         end
         i=1;
         while i<=Nsmall
-            x2=particleS(i).x;
-            y2=particleS(i).y;
+            x2=centersS(i,1);
+            y2=centersS(i,2);
             if sqrt((x1-x2)^2+(y1-y2)^2)<((RS+RL)+(0.20*RL))
                 z=z+1;
             end
             i=i+1;
         end
         if z<1
-            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];
+            centersL(n,:)=[];radiiL(n)=[];metricL(n)=[];Idlarge(n)=[];
             Nlarge=Nlarge-1;
             n=n-1;
         end
@@ -311,7 +312,7 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
 
 
     %Combine large and small particles into a single struct
-    centers=[centersL; centersS]; radii=[radiiL; radiiS]; metrics=[metricsL; metricsS];
+    centers=[centersL; centersS]; radii=[radiiL; radiiS]; metrics=[metricL; metricS];
 
 end
 

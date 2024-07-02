@@ -303,13 +303,13 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             %Crop Image to just the portion of the drum that contains particles
             %by drawing circle on first frame in dataset
             if frame==1
-            imshow(Rimg_prepro)
+            imshow(red)
             drumCrop = drawcircle; 
             drumMask = createMask(drumCrop);
             
             %Draw a circle around a large particle to determine large particle
             %radius in pixels
-            imshow(Rimg_prepro);
+            imshow(red);
             d = drawcircle;
             RL = d.Radius;
             RL = round(RL);
@@ -320,13 +320,12 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             RS = d.Radius;
             RS = round(RS);
             
-            pxPerMeter = 0.0047625 / RL;
             end
             
         
             %Crop images down to particle packing (make the toothed ring and 
             %everything outside of the drum black)
-            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(drumMask, class(Rimg_prepro)));
+            red = bsxfun(@times, red, cast(drumMask, class(red)));
             wallMask = bsxfun(@times, Gimg, cast(drumMask, class(Gimg)));
             wallMask=imadjust(wallMask,[0 0.05]);
             wallMask=imgaussfilt(wallMask,4);
