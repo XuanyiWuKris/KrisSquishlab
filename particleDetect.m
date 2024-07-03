@@ -1,6 +1,6 @@
 %function particle_detect(directory)
 % A script to find particle locations
-function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
+function particleDetect(directory, preProdirectory, imname, radiusRange, boundaryType, verbose)
 % directory = './';
 % imname = 'test.jpg';
 % radiusRange = [40, 57];
@@ -293,9 +293,11 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             %for frame = 1:1
             %frame = 663
             im = imread([directory,images(frame).name]);
-            % red = im(:,:,1);
-            % green = im(:,:,2);
-            % red = imsubtract(red, green*0.05);
+            red = im(:,:,1);
+            green = im(:,:,2);
+            red = imsubtract(red, green*0.05);
+
+            preProim = imread([preProdirectory,images(frame).name]);
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Integrate Alec's version %
@@ -327,14 +329,14 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
         
             %Crop images down to particle packing (make the toothed ring and 
             %everything outside of the drum black)
-            red = bsxfun(@times, red, cast(drumMask, class(red)));
+            preProim = bsxfun(@times, preProim, cast(drumMask, class(preProim)));
             wallMask = bsxfun(@times, green, cast(drumMask, class(green)));
             wallMask=imadjust(wallMask,[0 0.05]);
             wallMask=imgaussfilt(wallMask,4);
             wallMask=imbinarize(wallMask);
-            red = bsxfun(@times, red, cast(wallMask, class(red)));
+            preProim = bsxfun(@times, preProim, cast(wallMask, class(preProim)));
 
-            [centers, radii, metrics] = AlecParticleFind(red,wallMask,RS,RL,256,259);
+            [centers, radii, metrics] = AlecParticleFind(preProim,wallMask,RS,RL,256,259);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%
             % End of Alec's version %

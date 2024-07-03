@@ -27,6 +27,7 @@ warning('off','signal:findpeaks:largeMinPeakHeight')
 
 %% thresholding limits
 if boundaryType == "airtable"
+    directorydata = directory;
     minpeakheight = 0.35; %minimum peak height needed to count as contact
     minpeakprominence = 0.10; %assuming the above peak has a prominence of this number
     minpeakprom_main = 0.20; %alternate peak finding condition is if any peak has a prominence greater than this (both peak finding conditions run when you run this code)
@@ -41,7 +42,7 @@ if boundaryType == "airtable"
     rednormal = 2;
     padding =1;
     sigma = 80; % ephraim
-    ending = '.jpg'
+    ending = '.jpg';
 elseif boundaryType == "annulus"
     directorydata = [directory, 'warpedimg/'];
     minpeakheight = 0.10;

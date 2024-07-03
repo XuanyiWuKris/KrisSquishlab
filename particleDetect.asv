@@ -1,6 +1,6 @@
 %function particle_detect(directory)
 % A script to find particle locations
-function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
+function particleDetect(directory, preProdirectory, imname, radiusRange, boundaryType, verbose)
 % directory = './';
 % imname = 'test.jpg';
 % radiusRange = [40, 57];
@@ -296,10 +296,14 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
             red = im(:,:,1);
             green = im(:,:,2);
             red = imsubtract(red, green*0.05);
+
+            preProim = imread([preProdirectory,images(frame).name]);
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Integrate Alec's version %
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            red = im(:,:,:);
+            red = red*0.4;
             %Crop Image to just the portion of the drum that contains particles
             %by drawing circle on first frame in dataset
             if frame==1
@@ -325,14 +329,14 @@ function particleDetect(directory, imname, radiusRange, boundaryType, verbose)
         
             %Crop images down to particle packing (make the toothed ring and 
             %everything outside of the drum black)
-            red = bsxfun(@times, red, cast(drumMask, class(red)));
-            wallMask = bsxfun(@times, Gimg, cast(drumMask, class(Gimg)));
+            preProim = bsxfun(@times, preProim, cast(drumMask, class(preProim)));
+            wallMask = bsxfun(@times, green, cast(drumMask, class(green)));
             wallMask=imadjust(wallMask,[0 0.05]);
             wallMask=imgaussfilt(wallMask,4);
             wallMask=imbinarize(wallMask);
-            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(wallMask, class(Rimg_prepro)));
+            preProim = bsxfun(@times, preProim, cast(wallMask, class(preProim)));
 
-            [centers, radii, metrics] = AlecParticleFind(Rimg_prepro,wallMask,RS,RL,NsmallH,NlargeH);
+            [centers, radii, metrics] = AlecParticleFind(preProim,wallMask,RS,RL,256,259);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%
             % End of Alec's version %
