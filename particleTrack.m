@@ -42,7 +42,7 @@ if boundaryType == "airtable"
         frame
         %posData = dlmread([directory, datafiles(n).name]);
     
-        posData = load([directorydata,'particles/', datafiles(frame).name]);
+        posData = load([directorydata, datafiles(frame).name]);
         frameid = frame
         %frameid = str2double(datafiles(frame).name(frameidind:frameidind+3));
         %posData = new;

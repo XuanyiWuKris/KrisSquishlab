@@ -2,14 +2,14 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
 
 
     %Detect large and small particles with generous sensitivity
-    [centersL,radiiL,metricL] = imfindcircles(Rimg,[RL-3 RL+3],ObjectPolarity='bright',Method='TwoStage',Sensitivity=0.97,EdgeThreshold=0.025);
-    [centersS,radiiS,metricS] = imfindcircles(Rimg,[RS-2 RS+2],ObjectPolarity='bright',Method='TwoStage',Sensitivity=0.97,EdgeThreshold=0.025);
+    [centersL,radiiL,metricL] = imfindcircles(Rimg,[RL-3 RL+3],'objectpolarity','bright','sensitivity',0.945,'method','twostage','EdgeThreshold',0.02);
+    [centersS,radiiS,metricS] = imfindcircles(Rimg,[RS-2 RS+2],'objectpolarity','bright','sensitivity',0.945,'method','twostage','EdgeThreshold',0.02);
     fprintf('imfindcircles initially detected %d large particles\n',length(centersL))
     fprintf('imfindcircles initially detected %d small particles\n',length(centersS))
 
     %Number of particles detected
     Nlarge=length(centersL); Nsmall=length(centersS);
-    Idlarge=uint8(1):uint8(Nlarge); Idsmall=uint8(1):uint8(Nsmall);
+    Idlarge=1:Nlarge; Idsmall=1:Nsmall;
 
     %Remove any small or large particle whose perimeter lies on the
     %toothed ring
@@ -79,10 +79,7 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
                     n=n-1;
                     break
                 else
-                    centersS(j,:)=[];
-                    radiiS(j)=[];
-                    metricS(j)=[];
-                    Idsmall(j)=[];
+                    centersS(j,:)=[];radiiS(j)=[];metricS(j)=[];Idsmall(j)=[];
                     Nsmall=Nsmall-1;
                     j=j-1;
                 end
@@ -137,10 +134,10 @@ function [centers, radii, metrics] = AlecParticleFind(Rimg,wallMask,RS,RL,Nsmall
         numParticlesPartialEnclosed=0;
         numParticlesFullyEnclosed=0;
         while j<=Nsmall
-            x2=centersL(j,1);
-            y2=centersL(j,2);
-            r2=radiiL(j);
-            m2=metricL(j);
+            x2=centersS(j,1);
+            y2=centersS(j,2);
+            r2=radiiS(j);
+            m2=metricS(j);
             if sqrt((x1-x2)^2+(y1-y2)^2) < r1+0.5*r2 && m2>1.25*m1
                 numParticlesPartialEnclosed=numParticlesPartialEnclosed+1;
             end

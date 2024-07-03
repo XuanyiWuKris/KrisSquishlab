@@ -11,8 +11,8 @@ function PeGSModular(topDirectory, imageNames)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%User input values
 %topDirectory = '/mnt/ncsudrive/c/cllee3/MyEno/DATA/jekollme/20160701/Steps/artificial/'
-topDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/'; % location of image files
-preProDirectory = 'C://Users/Squishfolk/Desktop/Alec/211MSDCF/PreProImages/';
+topDirectory = 'C://Users/Squishfolk/Desktop/Kris/211MSDCFSample/'; % location of image files
+preProDirectory = 'C://Users/Squishfolk/Desktop/Kris/211MSDCFSample/PreProImages/';
 %topDirectory = './testdata/square/'
 %topDirectory = '/Users/carmenlee/Desktop/20150731reprocesseduniaxial/'
 % %topDirectory = './DATA/test/Step09/'
@@ -20,11 +20,11 @@ imageNames = 'DSC*.JPG'; %image format and regex
 frameidind = 16;
 %
 %files = dir([topDirectory,imageNames])
-boundaryType = "drum"; %if airtable use "airtable" if annulus use "annulus"
-radiusRange = [40, 57];
+boundaryType = "annulus"; %if airtable use "airtable" if annulus use "annulus"
+radiusRange = [60, 110];
 %radiusRange = [45, 78]; %airtable
 
-verbose = false;
+verbose = true;
 
 % if (isfile([topDirectory, 'log.txt']))
 %     fid = fopen([topDirectory, 'log.txt'], 'r');
@@ -70,13 +70,12 @@ if not(isfolder(append(topDirectory,'synthImg'))) %make a new folder with warped
 end
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%preprocess(topDirectory, imageNames, boundaryType, verbose);
+preprocess(topDirectory, imageNames, boundaryType, verbose);
 
 %%
-particleDetect(preProDirectory, imageNames, radiusRange, boundaryType, verbose);
+particleDetect(topDirectory, preProDirectory, imageNames, radiusRange, boundaryType, verbose);
 fprintf('particles detected')
 
-boundaryType = "airtable";
 
 %%
 particleTrack(topDirectory, imageNames, boundaryType, frameidind, verbose, false);

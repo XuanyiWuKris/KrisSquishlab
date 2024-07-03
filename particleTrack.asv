@@ -29,6 +29,8 @@ else
     [directorydata, imname(1:end-4), 'centers.txt']
     datafiles = dir([directorydata, imname(1:end-4), 'centers.txt'])
 end
+directorydata
+datafiles(1).name
 
 dtol=10;
 

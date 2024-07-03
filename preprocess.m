@@ -12,11 +12,11 @@ nFrames = length(images);
 
 %cen = [2710, 2768]; %measure the center of annulus in images taken by the camera
 %rad = [2830/2, 5330/2];
-cen = [58+5313/2, 110+5313/2];
-rad = [2783/2, 5313/2];
+cen = [4956.5, 3102.5];
+rad = [0,3037.8];
 %line 58 contains experiment specific values)
-xLimitsOut = [1,6304];
-yLimitsOut = [1,6304]; %can be calculated just before imwarp is called but it is very slow. Recommend doing once then hardcoding in for speed)
+xLimitsOut = [1,10304];
+yLimitsOut = [1,7136]; %can be calculated just before imwarp is called but it is very slow. Recommend doing once then hardcoding in for speed)
 %% for doing camera transforms for both camera lens distortion and particle distance correction on annulus
 
 
