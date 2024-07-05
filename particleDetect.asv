@@ -11,7 +11,7 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
     end
     if boundaryType == "annulus"
         
-        images=dir([directory, '/warpedimg/',imname(1:end-4),'warped.tif']);
+        images=dir([directory,imname]);
         nFrames = length(images);
         cen = [5395.4, 3472.5]; %measure the center of annulus in images taken by the camera
         rad = [0, 3471.4];
@@ -27,16 +27,18 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
             im = imread([images(frame).folder,'/', images(frame).name]);
             red = im(:,:,1);
             green = im(:,:,2);
-            red = imsubtract(red, green*0.2); %this works for the annulus images, removes excess green
-            red = imadjust(red, [0.20,0.65]); %this works for annulus, might need to tweak, brightens image
-
-            sigma = 50; % chosen by visual inspection
-            G = fspecial('gaussian', 3*sigma+1, sigma);
-            yb = imfilter(red, G, 'replicate'); %removes large scale image features like bright spots
-            red = bsxfun(@minus, red,yb);
+            % red = imsubtract(red, green*0.2); %this works for the annulus images, removes excess green
+            % red = imadjust(red, [0.20,0.65]); %this works for annulus, might need to tweak, brightens image
+            % 
+            % sigma = 50; % chosen by visual inspection
+            % G = fspecial('gaussian', 3*sigma+1, sigma);
+            % yb = imfilter(red, G, 'replicate'); %removes large scale image features like bright spots
+            % red = bsxfun(@minus, red,yb);
             
-            % preProname = [images(frame).name(1:end-10), '.JPG'];
-            % preProim = imread([preProdirectory,preProname]); 
+            preProname = images(frame).name;
+            preProim = imread([preProdirectory,preProname]);
+            Rimg_prepro = preProim(:,:,:);
+            Rimg_prepro = Rimg_prepro*0.4;
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Integrate Alec's version %
@@ -50,19 +52,17 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
             drumMask = createMask(drumCrop);
             size(drumMask)
             end
-            
-            thresim = imbinarize(im(:,:,1),T-3/256);
-            thresim = thresim * 
+
             %Crop images down to particle packing (make the toothed ring and 
             %everything outside of the drum black)
-            thresim = bsxfun(@times, thresim, cast(drumMask, class(thresim)));
+            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(drumMask, class(Rimg_prepro)));
             wallMask = bsxfun(@times, green, cast(drumMask, class(green)));
             wallMask=imadjust(wallMask,[0 0.05]);
             wallMask=imgaussfilt(wallMask,4);
             wallMask=imbinarize(wallMask);
-            thresim = bsxfun(@times, thresim, cast(wallMask, class(thresim)));
+            Rimg_prepro = bsxfun(@times, Rimg_prepro, cast(wallMask, class(Rimg_prepro)));
 
-            [centers, radii, metrics] = AlecParticleFind(thresim,wallMask,RS,RL,NS,NL);%values found by tweaking 
+            [centers, radii, metrics] = AlecParticleFind(Rimg_prepro,wallMask,RS,RL,NS,NL);%values found by tweaking 
             %%%%%%%%%%%%%%%%%%%%%%%%%
             % End of Alec's version %
             %%%%%%%%%%%%%%%%%%%%%%%%%       
@@ -71,18 +71,17 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
                 h1 = figure(1);
                 ax1 = axes('Parent', h1);
 
-                subplot(1, 2, 1)
+                %subplot(1, 2, 1)
                 imshow(red)
 
-                subplot(1, 2, 2)
-                imshow(thresim)
+                %subplot(1, 2, 2)
                 %green =imadjust(green);
                 %imshow(green);
                 hold on;
                 axis on
             end
 
-            % [centers, radii, metrics] = imfindcircles(red,radiusRange,'objectpolarity','dark','sensitivity',0.945,'method','twostage','EdgeThreshold',0.02);
+            %[centers, radii, metrics] = imfindcircles(red,radiusRange,'objectpolarity','dark','sensitivity',0.945,'method','twostage','EdgeThreshold',0.02);
 
 
 %% 
@@ -93,8 +92,8 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
             fprintf('%d particles detected',size(rt))
 
             %binarize radius
-            rt(rt<49) = 44;
-            rt(rt>49) = 55;
+            rt(rt<75) = 44;
+            rt(rt>75) = 55;
      %%      %beginning cleaning section
 
             %convert back to real space
@@ -127,84 +126,84 @@ function particleDetect(directory, preProdirectory, imname, radiusRange, boundar
 
             %remove some of the misfound particles too close to the center
             
-            radialPos = sqrt((u-cen(1)).^2+(v-cen(2)).^2);
-            closeind = find(radialPos <= rad(1)+15 );
-            closeind = sortrows(closeind, 'descend');
-
-
-            xt(closeind) = [];
-            yt(closeind) = [];
-            radii(closeind) = [];
-            rt(closeind) = [];
-            metrics(closeind)= [];
-            u(closeind) = [];
-            v(closeind) = [];
-
-            if verbose
-                viscircles([xt, yt], rt,'EdgeColor', 'b')
-            end
-            %%
-            %now we look for particles with a dramatic overlap
-            dmat = pdist2([u,v],[u,v]); %Creates a distance matrix for particle center locations
-            rmat = rt + rt'; %Makes a combination of radii for each particle
-
-            friendmat = dmat < (rmat - 25) & dmat~=0; %Logical "friend" matrix
-            [f1, f2] = find(friendmat == 1);
-
-
-            badind = zeros(length(f1),1);
-
-            M = length(f1);
-            %this picks out the worse circle
-            for n=1:M
-                if metrics(f1(n)) > metrics(f2(n))
-                    badind(n) = f2(n);
-                else
-                    badind(n) = f1(n);
-                end
-            end
-            badind = badind(badind~=0);
-            badind = unique(badind);
-            badind = sortrows(badind, 'descend');
-
-
-            xt(badind) = [];
-            yt(badind) = [];
-            radii(badind) = [];
-            rt(badind) = [];
-            metrics(badind)= [];
-            u(badind) = [];
-            v(badind) = [];
-            
-            if verbose
-                viscircles([xt, yt], rt,'EdgeColor','g'); %draw particle outline
-                hold on;
-            end
-            %%
-            dmat = pdist2([u,v],[u,v]);
-            rmat = rt + rt';
-            friendmat = dmat < (rmat -8 ) & dmat~=0; %Logical "friend" matrix
-
-            % %friendmat = triu(friendmat); %Only examine the upper triangle portion (no repeats)
-            [f1, f2] = find(friendmat == 1);
-            % [f3, f4] = find(friendmat2 == 1);
-            badind = unique(f2);
-            M = length(badind);
-            toobig = zeros(M, 1);
-            %
-            badin2 = unique(f2);
-
-            for n=1:M
-                sum(f2 == badin2(n));
-                if  sum(f2 == badin2(n))>2
-                    if rt(badind(n)) > 49
-                        rt(badind(n)) = 44;
-                        toobig(n) = badind(n);
-
-                    end
-                end
-            end
-            toobig = toobig(toobig~=0);
+            % radialPos = sqrt((u-cen(1)).^2+(v-cen(2)).^2);
+            % closeind = find(radialPos <= rad(1)+15 );
+            % closeind = sortrows(closeind, 'descend');
+            % 
+            % 
+            % xt(closeind) = [];
+            % yt(closeind) = [];
+            % radii(closeind) = [];
+            % rt(closeind) = [];
+            % metrics(closeind)= [];
+            % u(closeind) = [];
+            % v(closeind) = [];
+            % 
+            % if verbose
+            %     viscircles([xt, yt], rt,'EdgeColor', 'b')
+            % end
+            % %%
+            % %now we look for particles with a dramatic overlap
+            % dmat = pdist2([u,v],[u,v]); %Creates a distance matrix for particle center locations
+            % rmat = rt + rt'; %Makes a combination of radii for each particle
+            % 
+            % friendmat = dmat < (rmat - 25) & dmat~=0; %Logical "friend" matrix
+            % [f1, f2] = find(friendmat == 1);
+            % 
+            % 
+            % badind = zeros(length(f1),1);
+            % 
+            % M = length(f1);
+            % %this picks out the worse circle
+            % for n=1:M
+            %     if metrics(f1(n)) > metrics(f2(n))
+            %         badind(n) = f2(n);
+            %     else
+            %         badind(n) = f1(n);
+            %     end
+            % end
+            % badind = badind(badind~=0);
+            % badind = unique(badind);
+            % badind = sortrows(badind, 'descend');
+            % 
+            % 
+            % xt(badind) = [];
+            % yt(badind) = [];
+            % radii(badind) = [];
+            % rt(badind) = [];
+            % metrics(badind)= [];
+            % u(badind) = [];
+            % v(badind) = [];
+            % 
+            % if verbose
+            %     viscircles([xt, yt], rt,'EdgeColor','g'); %draw particle outline
+            %     hold on;
+            % end
+            % %%
+            % dmat = pdist2([u,v],[u,v]);
+            % rmat = rt + rt';
+            % friendmat = dmat < (rmat -8 ) & dmat~=0; %Logical "friend" matrix
+            % 
+            % % %friendmat = triu(friendmat); %Only examine the upper triangle portion (no repeats)
+            % [f1, f2] = find(friendmat == 1);
+            % % [f3, f4] = find(friendmat2 == 1);
+            % badind = unique(f2);
+            % M = length(badind);
+            % toobig = zeros(M, 1);
+            % %
+            % badin2 = unique(f2);
+            % 
+            % for n=1:M
+            %     sum(f2 == badin2(n));
+            %     if  sum(f2 == badin2(n))>2
+            %         if rt(badind(n)) > 49
+            %             rt(badind(n)) = 44;
+            %             toobig(n) = badind(n);
+            % 
+            %         end
+            %     end
+            % end
+            % toobig = toobig(toobig~=0);
 
             %viscircles([u(toobig),v(toobig)], rt(toobig), edgecolor = 'y');
 

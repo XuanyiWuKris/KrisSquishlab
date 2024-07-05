@@ -48,10 +48,9 @@ elseif boundaryType == "annulus"
     minpeakheight = 0.10;
     minpeakprominence = 0.06;
     minpeakprom_main = 0.06;
-    RL = 100;
-    pxPerMeter = 0.0047625 / RL;
+    pxPerMeter = 0.0047625 / 100;
     fsigma = 100; %photoelastic stress coefficient
-    g2cal = 100; %Calibration Value for the g^2 method, can be computed by joG2cal.m
+    g2cal = 145; %Calibration Value for the g^2 method, can be computed by joG2cal.m
     dtol = 30; % How far away can the outlines of 2 particles be to still be considered Neighbours
     contactG2Threshold = 0.5; %sum of g2 in a contact area larger than this determines a valid contact
     CR = 15; 
@@ -60,8 +59,8 @@ elseif boundaryType == "annulus"
     rednormal = 8;
     padding = 1;
     sigma  = 50; %for blurring large scale features
-    polarizerstrip = [[2731,2719,3643,3666];[212,212,6099,6100]]; % this seems like not significant so I didn't modify the number here
-    ending = '.JPG';
+    polarizerstrip = [[2731,2719,3643,3666];[212,212,6099,6100]];
+    ending = '.tif';
 end
 
 %% importing files
@@ -115,7 +114,7 @@ for imgnumb = 1:length(files)
         frame = imgnumb;
     elseif boundaryType == "annulus"
         
-        bckgnd = poly2mask(polarizerstrip(1,:),polarizerstrip(2,:), size(Gimg,1), size(Gimg,2));
+        bckgnd = poly2mask(polarizerstrip(1,:),polarizerstrip(2,:), length(Gimg), length(Gimg));
         Gimg = inpaintCoherent(Gimg,bckgnd,'SmoothingFactor',5,'Radius',15);
         
         if calibrate == true
